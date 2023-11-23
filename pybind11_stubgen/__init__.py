@@ -6,6 +6,7 @@ import importlib
 import itertools
 import inspect
 import logging
+import platform
 import sys
 import os
 import re
@@ -17,6 +18,8 @@ _visited_objects = []
 
 # A list of function docstring pre-processing hooks
 function_docstring_preprocessing_hooks: List[Callable[[str], str]] = []
+
+PYBIND11_STUBGEN_ADD_DLL_DIRECTORY_NAME = "PYBIND11_STUBGEN_ADD_DLL_DIRECTORY"
 
 
 class DirectoryWalkerGuard(object):
@@ -919,7 +922,6 @@ def recursive_mkdir_walker(subdirs, callback):  # type: (List[str], Callable) ->
         with DirectoryWalkerGuard(subdirs[0]):
             recursive_mkdir_walker(subdirs[1:], callback)
 
-
 def main(args=None):
     parser = ArgumentParser(prog='pybind11-stubgen', description="Generates stubs for specified modules")
     parser.add_argument("-o", "--output-dir", help="the root directory for output stubs", default="./stubs")
@@ -968,6 +970,17 @@ def main(args=None):
     if sys_args.root_module_suffix_deprecated is not None:
         sys_args.root_module_suffix = sys_args.root_module_suffix_deprecated
         warnings.warn("`--root_module_suffix` is deprecated in favor of `--root-module-suffix`", FutureWarning)
+
+    # On Windows with Python 3.8+, Python doesn't search DLL in PATH anymore
+    # We must specify DLL search path manually with `os.add_dll_directory`
+    # See https://github.com/python/cpython/issues/87339#issuecomment-1093902060
+    if platform.system() == "Windows":
+        dll_directories_str = os.getenv(PYBIND11_STUBGEN_ADD_DLL_DIRECTORY_NAME, "")
+        dll_directories = map(lambda x: x.strip(), dll_directories_str.split(";"))
+        dll_directories = filter(lambda x: len(x) > 0, dll_directories)
+        for dll_dir in dll_directories:
+            logger.debug(f"Add {dll_dir} to the DLL search path")
+            os.add_dll_directory(dll_dir)
 
     stderr_handler = logging.StreamHandler(sys.stderr)
     handlers = [stderr_handler]
