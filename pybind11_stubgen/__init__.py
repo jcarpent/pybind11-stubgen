@@ -976,7 +976,8 @@ def main(args=None):
     # See https://github.com/python/cpython/issues/87339#issuecomment-1093902060
     if platform.system() == "Windows":
         dll_directories_str = os.getenv(PYBIND11_STUBGEN_ADD_DLL_DIRECTORY_NAME, "")
-        dll_directories = dll_directories_str.split(";")
+        dll_directories = map(lambda x: x.strip(), dll_directories_str.split(";"))
+        dll_directories = filter(lambda x: len(x) > 0, dll_directories)
         for dll_dir in dll_directories:
             logger.debug(f"Add {dll_dir} to the DLL search path")
             os.add_dll_directory(dll_dir)
