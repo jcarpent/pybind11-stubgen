@@ -90,7 +90,7 @@ class FunctionSignature(object):
 
             if USE_BOOST_PYTHON:
                 if args:
-                    find_optional_args = re.findall('\[(.*?)\]$', args)
+                    find_optional_args = re.findall(r'\[(.*?)\]$', args)
                     optional_args = None
                     if find_optional_args:
                         optional_args = find_optional_args[0]
@@ -114,7 +114,7 @@ class FunctionSignature(object):
 
                     if nominal_args:
                         for k,arg in enumerate(nominal_args):
-                            type_name = re.findall('\((.*?)\)', arg)[0]
+                            type_name = re.findall(r'\((.*?)\)', arg)[0]
                             arg_name = arg.split(")")[1]
                             arg_name = arg_name.replace(' ','_')
 
@@ -130,7 +130,7 @@ class FunctionSignature(object):
                             # Check for default value
                             split_arg_equal = arg.split('=',maxsplit=1)
                             main_arg = split_arg_equal[0]
-                            type_name = re.findall('\((.*?)\)', main_arg)[0]
+                            type_name = re.findall(r'\((.*?)\)', main_arg)[0]
 
                             arg_name = main_arg.split(")")[1]
                             arg_name = arg_name.replace(' ','_')
